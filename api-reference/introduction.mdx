@@ -1,33 +1,53 @@
 ---
-title: 'Introduction'
-description: 'Example section for showcasing API endpoints'
+title: 'OTLP Endpoints'
+description: 'OpenTelemetry Protocol ingestion endpoints for traces, metrics, and logs'
 ---
 
-<Note>
-  If you're not looking to build API reference documentation, you can delete
-  this section by removing the api-reference folder.
-</Note>
+## Overview
 
-## Welcome
+APM Ninja provides OTLP (OpenTelemetry Protocol) endpoints for ingesting observability data from your applications. This section documents the public ingestion API for traces, metrics, and logs.
 
-There are two ways to build API documentation: [OpenAPI](https://mintlify.com/docs/api-playground/openapi/setup) and [MDX components](https://mintlify.com/docs/api-playground/mdx/configuration). For the starter kit, we are using the following OpenAPI specification.
+## Supported Protocols
 
-<Card
-  title="Plant Store Endpoints"
-  icon="leaf"
-  href="https://github.com/mintlify/starter/blob/main/api-reference/openapi.json"
->
-  View the OpenAPI specification file
-</Card>
+APM Ninja supports two OTLP ingestion protocols:
+
+- **OTLP/HTTP** - HTTP endpoints accepting protobuf-encoded OTLP payloads
+- **OTLP/gRPC** - gRPC service accepting OTLP protobuf requests
+
+Both protocols support the three core observability signals: traces, metrics, and logs.
 
 ## Authentication
 
-All API endpoints are authenticated using Bearer tokens and picked up from the specification file.
+All OTLP endpoints require API key authentication. Include your environment's API key in requests using one of these methods:
 
-```json
-"security": [
-  {
-    "bearerAuth": []
-  }
-]
+- `x-api-key: <your-api-key>` header
+- `Authorization: Bearer <your-api-key>` header
+
+You can find your API keys in the APM Ninja console under your environment settings.
+
+## Endpoint Reference
+
+This section documents:
+
+- **POST /v1/traces** - OTLP HTTP trace ingestion
+- **POST /v1/metrics** - OTLP HTTP metrics ingestion
+- **POST /v1/logs** - OTLP HTTP logs ingestion
+- **OTLP gRPC** - gRPC service for traces, metrics, and logs
+
+<Note>
+  This section covers only the standard OTLP endpoints. Alternative log ingestion endpoints under `/v2/ingest/logs/*` are documented separately.
+</Note>
+
+## Production Endpoint
+
+All OTLP HTTP endpoints are available at:
+
+```
+https://otlp.apmninja.com
+```
+
+The OTLP gRPC service is available at:
+
+```
+otlp.apmninja.com:4317
 ```
