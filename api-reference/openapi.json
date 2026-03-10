@@ -1,216 +1,183 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "OpenAPI Plant Store",
-    "description": "A sample API that uses a plant store as an example to demonstrate features in the OpenAPI specification",
-    "license": {
-      "name": "MIT"
-    },
+    "title": "APM Ninja OTLP Ingestion API",
+    "description": "OpenTelemetry Protocol (OTLP) endpoints for ingesting traces, metrics, and logs into APM Ninja. These endpoints accept protobuf-encoded OTLP export requests as defined in the OpenTelemetry specification.",
     "version": "1.0.0"
   },
   "servers": [
     {
-      "url": "http://sandbox.mintlify.com"
+      "url": "https://otlp.apmninja.com",
+      "description": "Production OTLP ingestion endpoint"
     }
   ],
   "security": [
     {
-      "bearerAuth": []
+      "apiKeyAuth": []
     }
   ],
   "paths": {
-    "/plants": {
-      "get": {
-        "description": "Returns all plants from the system that the user has access to",
-        "parameters": [
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "The maximum number of results to return",
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Plant response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Plant"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      },
+    "/v1/traces": {
       "post": {
-        "description": "Creates a new plant in the store",
+        "summary": "Ingest OTLP traces",
+        "description": "Accepts OTLP trace data in protobuf format. This endpoint implements the OpenTelemetry Protocol specification for trace ingestion.",
+        "operationId": "exportTraces",
         "requestBody": {
-          "description": "Plant to add to the store",
+          "description": "OTLP ExportTraceServiceRequest encoded as protobuf",
+          "required": true,
           "content": {
-            "application/json": {
+            "application/x-protobuf": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "type": "string",
+                "format": "binary",
+                "description": "Protobuf-encoded ExportTraceServiceRequest message as defined in opentelemetry/proto/collector/trace/v1/trace_service.proto"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
-            "description": "plant response",
+            "description": "Traces accepted successfully",
             "content": {
-              "application/json": {
+              "application/x-protobuf": {
                 "schema": {
-                  "$ref": "#/components/schemas/Plant"
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Protobuf-encoded ExportTraceServiceResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
+            "description": "Invalid request - malformed protobuf or invalid trace data"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid API key"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal server error"
           }
-        }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
       }
     },
-    "/plants/{id}": {
-      "delete": {
-        "description": "Deletes a single plant based on the ID supplied",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "description": "ID of plant to delete",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int64"
-            }
-          }
-        ],
-        "responses": {
-          "204": {
-            "description": "Plant deleted",
-            "content": {}
-          },
-          "400": {
-            "description": "unexpected error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "webhooks": {
-    "/plant/webhook": {
+    "/v1/metrics": {
       "post": {
-        "description": "Information about a new plant added to the store",
+        "summary": "Ingest OTLP metrics",
+        "description": "Accepts OTLP metrics data in protobuf format. This endpoint implements the OpenTelemetry Protocol specification for metrics ingestion.",
+        "operationId": "exportMetrics",
         "requestBody": {
-          "description": "Plant added to the store",
+          "description": "OTLP ExportMetricsServiceRequest encoded as protobuf",
+          "required": true,
           "content": {
-            "application/json": {
+            "application/x-protobuf": {
               "schema": {
-                "$ref": "#/components/schemas/NewPlant"
+                "type": "string",
+                "format": "binary",
+                "description": "Protobuf-encoded ExportMetricsServiceRequest message as defined in opentelemetry/proto/collector/metrics/v1/metrics_service.proto"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Return a 200 status to indicate that the data was received successfully"
+            "description": "Metrics accepted successfully",
+            "content": {
+              "application/x-protobuf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Protobuf-encoded ExportMetricsServiceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - malformed protobuf or invalid metrics data"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid API key"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal server error"
           }
-        }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
+      }
+    },
+    "/v1/logs": {
+      "post": {
+        "summary": "Ingest OTLP logs",
+        "description": "Accepts OTLP logs data in protobuf format. This endpoint implements the OpenTelemetry Protocol specification for logs ingestion.",
+        "operationId": "exportLogs",
+        "requestBody": {
+          "description": "OTLP ExportLogsServiceRequest encoded as protobuf",
+          "required": true,
+          "content": {
+            "application/x-protobuf": {
+              "schema": {
+                "type": "string",
+                "format": "binary",
+                "description": "Protobuf-encoded ExportLogsServiceRequest message as defined in opentelemetry/proto/collector/logs/v1/logs_service.proto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Logs accepted successfully",
+            "content": {
+              "application/x-protobuf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "Protobuf-encoded ExportLogsServiceResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request - malformed protobuf or invalid logs data"
+          },
+          "401": {
+            "description": "Unauthorized - missing or invalid API key"
+          },
+          "429": {
+            "description": "Rate limit exceeded"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        },
+        "security": [
+          {
+            "apiKeyAuth": []
+          }
+        ]
       }
     }
   },
   "components": {
-    "schemas": {
-      "Plant": {
-        "required": [
-          "name"
-        ],
-        "type": "object",
-        "properties": {
-          "name": {
-            "description": "The name of the plant",
-            "type": "string"
-          },
-          "tag": {
-            "description": "Tag to specify the type",
-            "type": "string"
-          }
-        }
-      },
-      "NewPlant": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Plant"
-          },
-          {
-            "required": [
-              "id"
-            ],
-            "type": "object",
-            "properties": {
-              "id": {
-                "description": "Identification number of the plant",
-                "type": "integer",
-                "format": "int64"
-              }
-            }
-          }
-        ]
-      },
-      "Error": {
-        "required": [
-          "error",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      }
-    },
     "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer"
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key for environment authentication. Can also be provided as a Bearer token in the Authorization header."
       }
     }
   }
