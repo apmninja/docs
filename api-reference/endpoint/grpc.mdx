@@ -1,0 +1,98 @@
+---
+title: 'OTLP gRPC'
+description: 'gRPC service for OTLP trace, metrics, and logs ingestion'
+---
+
+## Overview
+
+APM Ninja provides an OTLP gRPC service for ingesting traces, metrics, and logs using the OpenTelemetry Protocol over gRPC.
+
+## Endpoint
+
+```
+otlp.apmninja.com:4317
+```
+
+## Protocol
+
+gRPC with protobuf-encoded OTLP messages
+
+## Authentication
+
+All gRPC requests require API key authentication using gRPC metadata:
+
+```
+x-api-key: <your-api-key>
+```
+
+Alternatively, you can use the `authorization` metadata header:
+
+```
+authorization: Bearer <your-api-key>
+```
+
+## Supported Services
+
+The OTLP gRPC server implements the following OpenTelemetry service definitions:
+
+### Trace Service
+
+- **Service**: `opentelemetry.proto.collector.trace.v1.TraceService`
+- **Method**: `Export`
+- **Request**: `ExportTraceServiceRequest`
+- **Response**: `ExportTraceServiceResponse`
+
+### Metrics Service
+
+- **Service**: `opentelemetry.proto.collector.metrics.v1.MetricsService`
+- **Method**: `Export`
+- **Request**: `ExportMetricsServiceRequest`
+- **Response**: `ExportMetricsServiceResponse`
+
+### Logs Service
+
+- **Service**: `opentelemetry.proto.collector.logs.v1.LogsService`
+- **Method**: `Export`
+- **Request**: `ExportLogsServiceRequest`
+- **Response**: `ExportLogsServiceResponse`
+
+## Request Format
+
+All requests must be valid OTLP export requests encoded as protobuf messages according to the OpenTelemetry specification.
+
+The protobuf definitions are available in the [OpenTelemetry Protocol repository](https://github.com/open-telemetry/opentelemetry-proto).
+
+## Response Behavior
+
+### Success
+
+On successful ingestion, the service returns:
+- **Status**: `OK` (gRPC status code 0)
+- **Response**: Corresponding OTLP export response message
+
+### Error Cases
+
+The service may return the following gRPC status codes:
+
+| Status Code | Description |
+|-------------|-------------|
+| `UNAUTHENTICATED` (16) | Missing or invalid API key |
+| `INVALID_ARGUMENT` (3) | Malformed protobuf or invalid OTLP data |
+| `RESOURCE_EXHAUSTED` (8) | Rate limit exceeded |
+| `INTERNAL` (13) | Internal server error |
+
+## Usage Example
+
+When configuring OpenTelemetry SDKs or collectors to send data via gRPC:
+
+```yaml
+exporters:
+  otlp:
+    endpoint: otlp.apmninja.com:4317
+    headers:
+      x-api-key: <your-api-key>
+```
+
+<Note>
+  The gRPC endpoint uses port 4317 (the standard OTLP gRPC port). Do not include `http://` or `https://` in the endpoint configuration for gRPC clients.
+</Note>
